@@ -1,0 +1,311 @@
+#
+#
+#this is the API turing.niallbunting.com:3002
+#testing the GET/api/video endpoint
+#
+#
+Feature: In order to allow users to create playlists of songs 
+As an end client user
+I want to be able to manage a database of songs
+
+#check there are no songs in the database currently
+Scenario: List ALL songs when there are no songs in the database
+GIVEN the system has no songs present in the database
+WHEN the client requests a list of Songs
+THEN the reponse is a list containing zero songs
+
+#create a first songo 
+Scenario: Create a Lady Gaga video POST /api/video/
+GIVEN the system does not know about the following song:
+| artist     | song        | publishDate |
+| Lady Gaga  | Poker face  | 2017-09-01  |
+WHEN I submit a song with the required paramaters
+THEN the submissions should be succesful
+AND I should receive a response code of 201 #(succesful Created response code)
+AND I should receive the expected response body
+
+#create a second song with different values
+Scenario: Create an Ed Sheeran video POST /api/video/
+GIVEN the system does not know about the following song:
+| artist     | song         | publishDate |
+| Ed Sheeran | Galway Girl  | 2013-09-01  |
+WHEN I submit a song with the required paramaters
+THEN the submissions should be succesful
+AND I should receive a response code of 201 #(succesful Created response code)
+AND I should receive the expected response body
+
+#rerun the GET scenario to confirm boths POST worked
+Scenario: List All Songs GET /api/video
+GIVEN the system knows about the following songs:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+| unique id | Ed Sheeran | Galway Girl | 2013-02-01  | 2017-07-17  |
+WHEN the client requests a list of Songs
+THEN the response is a list containing 2 songs
+AND one song has the following attributes:
+| attribute   | types  | value                    |
+| id          | String | unique id |
+| artist      | String | Lady Gaga                |
+| song        | String | Poker face               |
+| publishDate | String | 2017-09-01               |
+| DateCreated | String | 2017-07-17               |
+AND one song has the following attributes:
+| attribute   | types  | value                    |
+| id          | String | unique id |
+| artist      | String | Ed Sheeran               |
+| song        | String | Galway Girl              |
+| publishDate | String | 2013-02-01               |
+| DateCreated | String | 2017-07-17               |
+AND the response code is 200
+
+#return only 1 song based on ID when there are muliple songs in the database
+Scenario: Return Info about 1 song  GET /api/video/(id)
+GIVEN the system knows about the following songs:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+| unique id | Ed Sheeran | Galway Girl | 2013-02-01  | 2017-07-17  |
+WHEN the client requests information about 1 song by passing the unique id for the Lady Gaga song
+THEN the response is a list containing 1 song 
+AND the song has the following attributes;
+| attribute   | types  | value      |
+| id          | String | unique id  |
+| artist      | String | Lady Gaga  |
+| song        | String | Poker face |
+| publishDate | String | 2017-09-01 |
+| DateCreated | String | 2017-07-17 |
+AND the response code is 200
+
+
+#confirm that there is no way to update a video yet
+Scenario: Update a video PATCH /api/video/(id)
+GIVEN There is no way to update a video yet
+WHEN I make a request to update a video with the correct parameters
+THEN I receive a response code of 501 
+# 500 means (Not Implemented)
+AND A message explaining this has not been implemented
+
+#confirm it is possible to delete a video
+Scenario: Delete a video DELETE /api/video/(id)
+Given the system knows about the following songs:
+| id         | artist     | song        | publishDate | DateCreated |
+| unique id  | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+| unique id  | Ed Sheeran | Galway Girl | 2013-02-01  | 2017-07-17  |
+When I try to delete the Ed Sheeran song Galway Girl
+THEN the song is deleted
+AND the reponse code is 204
+
+#rerun the GET scenario to confirm the DELETE worked
+Scenario: List All Songs GET /api/video
+GIVEN the system knows about the following songs:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+AND the reason it only knows this one song is because all other songs have been deleted
+WHEN the client requests a list of Songs
+THEN the response is a list containing 1 song
+AND one song has the following attributes:
+| attribute   | types  | value      |
+| id          | String | unique id  |
+| artist      | String | Lady Gaga  |
+| song        | String | Poker face |
+| publishDate | String | 2017-09-01 |
+| DateCreated | String | 2017-07-17 |
+AND the response code is 200
+
+#negative test attempt to POST a song without all required parameters
+Scenario: Attempt to create a song without 
+GIVEN the system does not know about the following song:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+WHEN I attempt to add a song without the "artist" path in the body
+THEN the song is not added
+AND a HTTP code 500 is displayed
+
+#
+#
+#
+#
+
+
+Feature: In order to allow users to create Playlists of songs
+As a client end user
+I wish to be able to create a playlist
+So that I can add songs later
+
+#check there are no playlists currently in the database
+GIVEN the system is not aware of any playlists
+WHEN the client requests a list of Playlists
+THEN the response is a list of zero playlists
+
+#create playlist 1 playlist
+Scenario: Creating a new playlist using POST endpoint /api/playlist
+GIVEN the system is not aware of any playlists
+WHEN the user submits a playlist with the parameters:
+| desc               | title   |
+| My first playlist. | My List |
+THEN the reponse code is 201
+AND the correct reponse body is returned which includes the <desc> and <title>
+
+#create 2 playlists at once
+Scenario: Creating a new playlist using POST endpoint /api/playlist
+GIVEN the system is not aware of any playlists
+WHEN the user submits a playlist with the parameters:
+| desc                  | title   |
+| Top 40 playlist.      | Top 40  |
+| Chilled out playlist. | Chilled |
+THEN the reponse code is 201
+AND the correct reponse body is returned which includes the <desc> and <title> as well as id and date created
+
+#delete a playlist 
+Scenario: Delete a playlist from the database
+GIVEN the system knows about the following playlist:
+| id        | desc                  | title   | date_created |
+| unique id | Chilled out playlist. | Chilled | 2017-07-17   |
+WHEN the user submits a request to delete the playlist 
+THEN the response code is 204
+AND there is no repsonse body
+
+#return a list of the playlists in the system
+Scenario:  Return a list of playlists - GET /api/playlist
+GIVEN the system knows about the following playlists
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+| unique id | Top 40 playlist.   | Top 40  | 2017-07-17   |
+WHEN the client requests a list of Playlists
+THEN the response is a list containing 2 playlists
+AND one playlist has the following attributes:
+| attribute   | types  | value                    |
+| id          | String | unique id                |
+| desc        | String | My first playlist.       |
+| title       | String | My List                  |
+| DateCreated | String | 2017-07-17               |
+AND one playlist has the following attributes:
+| attribute   | types  | value                    |
+| id          | String | unique id                |
+| desc        | String | Top 40 playlist.         |
+| title       | String | Top 40                   |
+| DateCreated | String | 2017-07-17               |
+AND the response is 200
+
+Scenario: Return a single playlist with zero songs in it GET /api/playlist/(id)
+GIVEN the system knows about the following playlists
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+| unique id | Top 40 playlist.   | Top 40  | 2017-07-17   |
+WHEN the client requests a specific playlist using a ID
+THEN the response is a list containing 1 playlist with the relevant ID
+AND the playlist has the following attributes:
+| attribute   | types  | value                    |
+| id          | String | unique id                |
+| desc        | String | Top 40 playlist.         |
+| title       | String | Top 40                   |
+| videos      | String | NULL                     |
+| DateCreated | String | 2017-07-17               |
+OR
+| attribute   | types  | value                    |
+| id          | String | unique id                |
+| desc        | String | My first playlist.       |
+| title       | String | My List                  |
+| videos      | String | NULL                     |
+| DateCreated | String | 2017-07-17               |
+AND the response is 200
+
+Scenario: Add a single song to a playlist
+GIVEN the system knows about the following playlists:
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+| unique id | Top 40 playlist.   | Top 40  | 2017-07-17   |
+AND the following songs:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+| unique id | Ed Sheeran | Galway Girl | 2013-02-01  | 2017-07-17  |
+WHEN the client adds a song using the correct parameters
+THEN the song is added to the playlist
+AND the reponse is 204
+
+Scenario: Add a list of songs to a playlist
+GIVEN the system knows about the following playlists:
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+| unique id | Top 40 playlist.   | Top 40  | 2017-07-17   |
+AND the following songs:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+| unique id | Ed Sheeran | Galway Girl | 2013-02-01  | 2017-07-17  |
+WHEN the client adds mulitple songs in a single request using the correct parameters
+THEN the songs are added to the playlist
+AND the response is 204
+
+Scenario: Remove a song from a playlist
+GIVEN the system knows about the following playlists:
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+AND the playlist My first playlist contains the song:
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+WHEN the client attmepts to remove the song from the playlist
+THEN the repsonse code is 501
+AND there is no response body
+
+#look at a playlist with two songs in, do not assert publishDate rules
+Scenario: Return a single playlist with two songs in it GET /api/playlist/(id)
+GIVEN the system knows about the following playlist
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+AND the playlist My first playlist has the following songs in it
+| id        | artist     | song        | publishDate | DateCreated |
+| unique id | Lady Gaga  | Poker face  | 2017-09-01  | 2017-07-17  |
+| unique id | Ed Sheeran | Galway Girl | 2013-02-01  | 2017-07-17  |
+WHEN the client requests My first playlist using the correct unique ID
+THEN the playlist is displayed in the body
+AND the videos array is populated with the videos contained in the playlist
+AND the response is 200
+
+#assert publish date rules
+Scenario: Retrun a single playlist with two songs in where publish dates are in the past and future
+GIVEN the system knows about the following playlist
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+AND the playlist My first playlist has the following songs in it
+| id        | artist     | song        | publishDate      | DateCreated |
+| unique id | Lady Gaga  | Poker face  | is in the future | 2017-07-17  |
+| unique id | Ed Sheeran | Galway Girl | is in the past   | 2017-07-17  |
+WHEN the client requests My first playlist using the correct unique ID
+THEN the playlist is displayed in the body
+AND the video array for the video where the publish date is in the future contains the video id
+AND the video array for the video where the publish date is in the future contains 'hidden=true'
+AND the video array for the video where the publish date is in the past contains the video id
+AND the video array for the video where the publish date is in the past contains the video song
+AND the video array for the video where the publish date is in the past contains the video artist
+AND the video array for the video where the publish date is in the past contains the video publishdate
+AND the video array for the video where the publish date is in the past contains the video _v
+AND the video array for the video where the publish date is in the past contains 'hidden=false'
+
+#delete a playlist
+Scenario: attempting to delete a Playlist
+GIVEN the system knows about the following playlist
+| id        | desc               | title   | date_created |
+| unique id | My first playlist. | My List | 2017-07-17   |
+WHEN the client user attempts to delete this playlist using the correct parameters
+THEN the repsonse code is 204
+AND the reponse body is empty
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
